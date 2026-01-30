@@ -16,7 +16,7 @@ interface FetchNotesResponse {
 // Отримання списка(пагінація + пошук)
 
 export async function FetchNotes(
-    pages: number,
+    page: number,
     search?: string
 ): Promise<FetchNotesResponse> {
     const response: AxiosResponse<FetchNotesResponse> = await api.get(
