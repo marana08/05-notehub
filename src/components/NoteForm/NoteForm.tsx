@@ -1,32 +1,45 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import css from "./NoteForm.module.css";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as Yup from "yup";
+
+import type { NewNote, NoteTag } from "../../types/note";
+import { createNotes } from "../../services/noteService";
+import css from "./NoteForm.module.css";
 
 interface NoteFormProps {
     onCancel: () => void;
 }
 
 const validationSchema = Yup.object({
-    title: Yup.string()
-        .min(3)
-        .max(50)
-        .required(),
+    title: Yup.string().min(3).max(50).required("Title is required"),
     content: Yup.string().max(500),
-    tag: Yup.string()
+    tag: Yup.mixed<NoteTag>()
         .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"])
-        .required(),
+        .required("Tag is required"),
 });
 
 export default function NoteForm({ onCancel }: NoteFormProps) {
+    const queryClient = useQueryClient();
+
+    const mutation = useMutation({
+        mutationFn: createNotes,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["notes"] });
+            onCancel();
+        },
+    });
+
     return (
-        <Formik
+        <Formik<NewNote>
             initialValues={{
                 title: "",
                 content: "",
                 tag: "Todo",
             }}
             validationSchema={validationSchema}
-            onSubmit={() => { }}
+            onSubmit={(values) => {
+                mutation.mutate(values);
+            }}
         >
             <Form className={css.form}>
                 <div className={css.formGroup}>
@@ -92,9 +105,9 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
                     <button
                         type="submit"
                         className={css.submitButton}
-                        disabled={false}
+                        disabled={mutation.isPending}
                     >
-                        Create note
+                        {mutation.isPending ? "Creating..." : "Create note"}
                     </button>
                 </div>
             </Form>

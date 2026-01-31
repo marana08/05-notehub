@@ -7,6 +7,8 @@ import Pagination from "../Pagination/Pagination";
 import SearchBox from "../SearchBox/SearchBox";
 import Modal from "../Modal/Modal";
 import NoteForm from "../NoteForm/NoteForm";
+import Loading from "../Loading/Loading";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
 
 import { FetchNotes } from "../../services/noteService";
 import css from "./App.module.css";
@@ -25,7 +27,11 @@ export default function App() {
         500
     );
 
-    const { data } = useQuery({
+    const {
+        data,
+        isLoading,
+        isError,
+    } = useQuery({
         queryKey: ["notes", page, debouncedSearch],
         queryFn: () => FetchNotes(page, debouncedSearch),
     });
@@ -56,7 +62,15 @@ export default function App() {
                 </button>
             </header>
 
-            {data && <NoteList notes={data.notes} />}
+            {isLoading && <Loading message="Loading notes..." />}
+
+            {isError && (
+                <ErrorMessage message="Failed to load notes. Please try again." />
+            )}
+
+            {data && !isLoading && !isError && (
+                <NoteList notes={data.notes} />
+            )}
 
             {isModalOpen && (
                 <Modal onClose={() => setIsModalOpen(false)}>
