@@ -1,7 +1,7 @@
-import type React from "react"
-import css from "./Modal.module.css"
+import type React from "react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
+import css from "./Modal.module.css";
 
 interface ModalProps {
     children: React.ReactNode;
@@ -18,8 +18,17 @@ export default function Modal({ children, onClose }: ModalProps) {
             }
         };
 
+        // 🔒 Disable background scroll
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
         window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            // 🔓 Restore background scroll
+            document.body.style.overflow = originalOverflow;
+        };
     }, [onClose]);
 
     const handleBackdropClick = (
@@ -42,6 +51,5 @@ export default function Modal({ children, onClose }: ModalProps) {
             </div>
         </div>,
         modalRoot
-
     );
 }
